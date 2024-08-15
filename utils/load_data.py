@@ -21,7 +21,7 @@ def load_mnist(to_device = False, validation_split=0.1, batch_size=1):
     
     train_loader = DataLoader(train_data, batch_size=batch_size)
     validation_loader = DataLoader(validation_data, batch_size=batch_size)
-    test_loader = DataLoader(test_dataset)
+    test_loader = DataLoader(test_dataset, batch_size=batch_size)
     img, _ = train_dataset[0]
     
     return train_loader, validation_loader, test_loader, img.size()

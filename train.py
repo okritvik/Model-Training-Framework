@@ -14,7 +14,7 @@ train_loader, validation_loader, test_loader, size = load_data.load_mnist(to_dev
 data_size_placeholder = tuple([batch] + list(size))
 
 # Create a model instance
-model = CustomModel(input_size=data_size_placeholder)
+model = CustomModel(input_size=data_size_placeholder, gpu_enabled=True)
 
 # Tensorboard logger for easy graphs of losses
 tb_logger = TensorBoardLogger(save_dir=os.getcwd()+"/logs", name="mnist_train")
