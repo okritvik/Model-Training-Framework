@@ -1,11 +1,15 @@
 import os
+from pytorch_lightning.utilities.types import TRAIN_DATALOADERS
 from torchvision.datasets import MNIST, ImageNet, CIFAR10, Cityscapes, Kitti, CocoDetection
 from torchvision.transforms import ToTensor
 from torch import utils, Tensor
 from torch.utils.data import DataLoader, random_split
+import pytorch_lightning as pl
+from custom_dataset import CustomDataset
 
 # TODO: For coco, the dataset needs to be downloaded, MS COCO API needs to be installed.
 # TODO: Add num_workers as a parameter for the functions (defaults 1) to support multiprocessing
+# TODO: Add class to load custom dataset (user needs to modify if required)
 
 def load_mnist(to_device = False, validation_split=0.1, batch_size=1):
     """Download and return MNIST dataloaders.
@@ -170,3 +174,34 @@ def load_kitti(to_device = False, validation_split=0.1, batch_size=1):
     img, _ = train_dataset[0]
     
     return train_loader, validation_loader, test_loader, img.size()
+
+class CustomDataloader(pl.LightningDataModule):
+    def __init__(self, data_path, num_workers, batch_size, to_device) -> None:
+        super().__init__()
+        self.data_path = data_path
+        self.num_workers = num_workers
+        self.batch_size = batch_size
+        self.to_device = to_device
+    
+    def prepare_data(self) -> None:
+        # run on single core.
+        # if the dataset needs to be downloaded, download in this function
+        pass
+    
+    def setup(self, stage: str) -> None:
+        if stage == "fit":
+            self.train_dataset = CustomDataset(data_path=self.data_path+"/train", labels_path=self.data_path+"/train_labels.txt", use_gpu=self.to_device)
+        elif stage == "validate":
+            self.val_dataset = CustomDataset(data_path=self.data_path+"/val", labels_path=self.data_path+"/val_labels.txt", use_gpu=self.to_device)
+        elif stage == "test":
+            self.test_dataset =CustomDataset(data_path=self.data_path+"/test", labels_path=self.data_path+"/test_labels.txt", use_gpu=self.to_device)
+    
+    def train_dataloader(self) -> DataLoader:
+        return DataLoader(self.train_dataset, batch_size=self.batch_size, num_workers=self.num_workers, shuffle=True)
+        
+    def val_dataloader(self) -> DataLoader:
+        return DataLoader(self.val_dataset, batch_size=self.batch_size, num_workers=self.num_workers, shuffle=True)
+    
+    def test_dataloader(self) -> DataLoader:
+        return DataLoader(self.test_dataset, batch_size=self.batch_size, num_workers=self.num_workers, shuffle=True)
+    
